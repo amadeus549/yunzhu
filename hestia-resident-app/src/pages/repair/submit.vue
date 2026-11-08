@@ -118,8 +118,10 @@ const submit = async () => {
     .filter((s) => (qty.value[s.id] || 0) > 0)
     .map((s) => ({ itemId: s.id, specId: null, quantity: qty.value[s.id] }))
 
+  // 后端全局时间格式为 yyyy-MM-dd HH:mm（JacksonObjectMapper 定义），
+  // 传 ISO 的 T 分隔格式会解析失败导致 400
   const expectTime =
-    date.value && time.value ? `${date.value}T${time.value}:00` : null
+    date.value && time.value ? `${date.value} ${time.value}` : null
 
   const id = await submitOrder({ ...form.value, title: form.value.title.trim(), expectTime, items })
   // 已选服务项同步进服务清单，便于后续查看
