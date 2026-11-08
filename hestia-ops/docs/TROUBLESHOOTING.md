@@ -593,3 +593,32 @@ location ^~ /doc.html {
 - `favicon.ico` 404 是 knife4j UI jar 本身未提供，直连后端同样 404，无碍
 - 经验：**nginx 转发的每个 location 都应显式配 `proxy_set_header Host $host`**；
   upstream 名尽量不含下划线（或全局统一加 Host 头）
+
+
+---
+
+## 错误十二：工单类型分页 500 复发（修复只补了一半）
+
+### 现象
+- 上一轮修复（DTO 补 bizType）后，`/admin/category/page` 依然 500
+- 8080（IDEA 运行）与 8081（Maven 用当前源码起的临时实例）**同时 500**——
+  排除「IDEA 旧编译产物」假设，说明源码仍有问题
+
+### 真实根因（从 8081 日志抓到堆栈）
+```
+ReflectionException: There is no getter for property named 'status'
+in 'class com.hestia.dto.CategoryPageQueryDTO'
+```
+XML pageQuery 有**三个**动态条件：`name`、`bizType`、`status`。
+上一轮只补了 `bizType`，漏了 `status`——修复不完整。
+
+### 教训：上一轮静态检查为什么漏报
+旧检查脚本用 `<select...>(.*?)</\1>` 反向引用闭合匹配语句体，
+pageQuery 内嵌**子查询 `(select count(*)...)`** 时闭合匹配错位，语句体不完整，
+`<if test="status">` 被漏掉。修正版改为「语句起点 + 查找对应闭合标签切片」，
+31 条语句全部覆盖。
+
+### 修复
+- `CategoryPageQueryDTO` 补 `status`（Integer）
+- 验证：8081 实例三种参数组合（空/bizType/status）全部 200
+- 全量静态检查重跑：31 条语句一致 ✓
