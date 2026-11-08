@@ -21,4 +21,7 @@ public class CategoryPageQueryDTO implements Serializable {
     //否则 MyBatis OGNL 求值抛「There is no getter for property」→ 接口 500
     private Integer bizType;
 
+    //状态 0停用 1启用（XML 动态条件同样引用此属性）
+    private Integer status;
+
 }
