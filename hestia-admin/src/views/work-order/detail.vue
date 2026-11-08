@@ -160,8 +160,15 @@ export default {
       }
     },
     can(statusCode) {
-      const list = this.detail.order && this.detail.order.allowedNext
-      return Array.isArray(list) && list.indexOf(statusCode) >= 0
+      const o = this.detail.order
+      if (!o) return false
+      // 优先用后端返回的 allowedNext；缺失时按前端内置状态机兜底
+      // （与后端 WorkOrderStatus.ALLOWED 流转表保持一致）
+      let list = o.allowedNext
+      if (!Array.isArray(list) || !list.length) {
+        list = { 1: [2, 0], 2: [3, 0], 3: [4, 2], 4: [5], 5: [6], 6: [7, 8], 8: [5], 0: [], 7: [] }[o.status] || []
+      }
+      return list.indexOf(statusCode) >= 0
     },
     async onAccept() {
       await this.$confirm('确认受理该工单？', '提示', { type: 'info' })
