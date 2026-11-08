@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.WorkOrderCategoryMapper">
+
+    <update id="update" parameterType="com.hestia.entity.WorkOrderCategory">
+        update wo_category
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="bizType != null">biz_type = #{bizType},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.CategoryVO">
+        select c.id, c.name, c.biz_type, c.sort, c.status,
+               (select count(*) from svc_item i where i.category_id = c.id) as item_count
+        from wo_category c
+        <where>
+            <if test="name != null and name != ''">and c.name like concat('%', #{name}, '%')</if>
+            <if test="bizType != null">and c.biz_type = #{bizType}</if>
+            <if test="status != null">and c.status = #{status}</if>
+        </where>
+        order by c.sort
+    </select>
+</mapper>

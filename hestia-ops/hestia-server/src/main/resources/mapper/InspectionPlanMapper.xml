@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.InspectionPlanMapper">
+
+    <update id="update" parameterType="com.hestia.entity.InspectionPlan">
+        update insp_plan
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="cycleType != null">cycle_type = #{cycleType},</if>
+            <if test="cycleValue != null">cycle_value = #{cycleValue},</if>
+            <if test="deviceCategory != null">device_category = #{deviceCategory},</if>
+            <if test="executorId != null">executor_id = #{executorId},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="generateAheadDays != null">generate_ahead_days = #{generateAheadDays},</if>
+            <if test="lastGenerateDate != null">last_generate_date = #{lastGenerateDate},</if>
+            <if test="nextGenerateDate != null">next_generate_date = #{nextGenerateDate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.InspectionPlanVO">
+        select p.id, p.name, p.cycle_type, p.cycle_value, p.device_category,
+               p.executor_id, s.name as executor_name, p.start_date, p.next_generate_date, p.status
+        from insp_plan p
+        left join sys_staff s on s.id = p.executor_id
+        <where>
+            <if test="name != null and name != ''">and p.name like concat('%', #{name}, '%')</if>
+            <if test="status != null">and p.status = #{status}</if>
+        </where>
+        order by p.id desc
+    </select>
+</mapper>

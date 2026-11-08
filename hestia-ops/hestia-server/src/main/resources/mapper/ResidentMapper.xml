@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.ResidentMapper">
+
+    <update id="update" parameterType="com.hestia.entity.Resident">
+        update sys_resident
+        <set>
+            <if test="openid != null">openid = #{openid},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.ResidentVO">
+        select r.id, r.name, r.phone, r.status,
+               (select count(*) from sys_premise p where p.resident_id = r.id) as premise_count
+        from sys_resident r
+        <where>
+            <if test="name != null and name != ''">and r.name like concat('%', #{name}, '%')</if>
+            <if test="phone != null and phone != ''">and r.phone like concat('%', #{phone}, '%')</if>
+        </where>
+        order by r.id desc
+    </select>
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.ServicePackageMapper">
+
+    <update id="update" parameterType="com.hestia.entity.ServicePackage">
+        update svc_package
+        <set>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="validDays != null">valid_days = #{validDays},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.ServicePackageVO">
+        select p.id, p.category_id, p.name, p.description, p.price, p.original_price, p.valid_days, p.status
+        from svc_package p
+        <where>
+            <if test="name != null and name != ''">and p.name like concat('%', #{name}, '%')</if>
+            <if test="categoryId != null">and p.category_id = #{categoryId}</if>
+            <if test="status != null">and p.status = #{status}</if>
+        </where>
+        order by p.id desc
+    </select>
+</mapper>

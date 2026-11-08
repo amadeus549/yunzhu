@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.WorkOrderLogMapper">
+
+    <select id="selectVOByOrderId" resultType="com.hestia.vo.WorkOrderLogVO">
+        select l.id, l.operator_id, l.operator_type, l.action, l.from_status, l.to_status, l.remark, l.create_time,
+               case l.operator_type
+                   when 1 then (select name from sys_staff where id = l.operator_id)
+                   when 2 then (select name from sys_resident where id = l.operator_id)
+                   else '系统'
+               end as operator_name
+        from wo_log l
+        where l.order_id = #{orderId}
+        order by l.id
+    </select>
+</mapper>

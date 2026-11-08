@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.WorkOrderItemMapper">
+
+    <insert id="insertBatch">
+        insert into wo_item (order_id, item_id, item_name, spec_id, spec_name, price, quantity, amount) values
+        <foreach collection="items" item="it" separator=",">
+            (#{it.orderId}, #{it.itemId}, #{it.itemName}, #{it.specId}, #{it.specName}, #{it.price}, #{it.quantity}, #{it.amount})
+        </foreach>
+    </insert>
+</mapper>

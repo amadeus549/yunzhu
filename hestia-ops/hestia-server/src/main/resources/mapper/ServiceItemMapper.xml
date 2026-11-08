@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.ServiceItemMapper">
+
+    <update id="update" parameterType="com.hestia.entity.ServiceItem">
+        update svc_item
+        <set>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="image != null">image = #{image},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="unit != null">unit = #{unit},</if>
+            <if test="durationMin != null">duration_min = #{durationMin},</if>
+            <if test="requiredSkill != null">required_skill = #{requiredSkill},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.ServiceItemVO">
+        select i.id, i.category_id, c.name as category_name, i.code, i.name, i.description,
+               i.price, i.unit, i.duration_min, i.required_skill, i.status, i.sort
+        from svc_item i
+        left join wo_category c on c.id = i.category_id
+        <where>
+            <if test="name != null and name != ''">and i.name like concat('%', #{name}, '%')</if>
+            <if test="categoryId != null">and i.category_id = #{categoryId}</if>
+            <if test="status != null">and i.status = #{status}</if>
+        </where>
+        order by i.category_id, i.sort
+    </select>
+</mapper>

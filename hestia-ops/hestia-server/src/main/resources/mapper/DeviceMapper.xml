@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.DeviceMapper">
+
+    <update id="update" parameterType="com.hestia.entity.Device">
+        update dev_device
+        <set>
+            <if test="deviceNo != null">device_no = #{deviceNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="brand != null">brand = #{brand},</if>
+            <if test="model != null">model = #{model},</if>
+            <if test="premiseId != null">premise_id = #{premiseId},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="installDate != null">install_date = #{installDate},</if>
+            <if test="warrantyEnd != null">warranty_end = #{warrantyEnd},</if>
+            <if test="maintainCycleDays != null">maintain_cycle_days = #{maintainCycleDays},</if>
+            <if test="lastMaintainDate != null">last_maintain_date = #{lastMaintainDate},</if>
+            <if test="nextMaintainDate != null">next_maintain_date = #{nextMaintainDate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="qrCode != null">qr_code = #{qrCode},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.DeviceVO">
+        select d.id, d.device_no, d.name, d.category, d.brand, d.model, d.premise_id, d.location,
+               d.install_date, d.warranty_end, d.maintain_cycle_days, d.last_maintain_date, d.next_maintain_date,
+               d.status,
+               case when d.next_maintain_date is not null and d.next_maintain_date &lt;= curdate() then 1 else 0 end as maintain_due,
+               case when d.warranty_end is not null and d.warranty_end &lt; curdate() then 1 else 0 end as warranty_expired
+        from dev_device d
+        <where>
+            <if test="deviceNo != null and deviceNo != ''">and d.device_no like concat('%', #{deviceNo}, '%')</if>
+            <if test="name != null and name != ''">and d.name like concat('%', #{name}, '%')</if>
+            <if test="category != null and category != ''">and d.category = #{category}</if>
+            <if test="status != null">and d.status = #{status}</if>
+            <if test="maintainDue != null and maintainDue == 1">
+                and d.next_maintain_date is not null and d.next_maintain_date &lt;= curdate()
+            </if>
+        </where>
+        order by d.category, d.device_no
+    </select>
+</mapper>

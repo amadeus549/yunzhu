@@ -1,0 +1,44 @@
+# ============================================================
+# 云筑 Hestia · git 忽略规则
+# ============================================================
+
+# ---- 本地环境配置（含密码/密钥，严禁入库）----
+application-dev.yml
+
+# ---- 构建产物与依赖 ----
+node_modules/
+dist/
+target/
+*.class
+*.jar
+
+# ---- IDE 配置 ----
+.idea/
+*.iml
+.vscode/
+
+# ---- 日志 / 备份 / 临时 ----
+logs/
+*.log
+*.bak
+mapper.bak/
+.cache/
+
+# ---- 本目录下的非仓库内容（第三方软件与原项目）----
+/Redis-x64-3.2.100/
+/cangqiong-nginx-1.20.2/
+/sky-take-out/
+
+# ---- nginx 运行时（仅保留 conf/ 配置源）----
+hestia-nginx/html/
+hestia-nginx/logs/
+hestia-nginx/temp/
+hestia-nginx/*.exe
+hestia-nginx/contrib/
+hestia-nginx/docs/
+*.exe
+
+# ---- 系统文件 ----
+.DS_Store
+Thumbs.db
+.workbuddy/

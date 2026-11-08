@@ -1,0 +1,23 @@
+# 本地环境配置模板
+# 用法：复制本文件为 application-dev.yml 并填入真实值。
+# 注意：application-dev.yml 含密码/密钥，已被 .gitignore 排除，切勿提交到仓库！
+
+hestia:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: localhost
+    port: 3306
+    database: hestia_ops
+    username: root
+    password: your-mysql-password
+  redis:
+    host: localhost
+    port: 6379
+    password:        # 本地无密码可留空
+    database: 0
+  alioss:
+    # 报修图片上传使用，如暂不使用可留空，上传接口会返回明确提示
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    access-key-id: your-access-key-id
+    access-key-secret: your-access-key-secret
+    bucket-name: your-bucket-name

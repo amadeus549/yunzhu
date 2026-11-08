@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+  datasource:
+    druid:
+      driver-class-name: ${hestia.datasource.driver-class-name}
+      url: jdbc:mysql://${hestia.datasource.host}:${hestia.datasource.port}/${hestia.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${hestia.datasource.username}
+      password: ${hestia.datasource.password}
+  redis:
+    host: ${hestia.redis.host}
+    port: ${hestia.redis.port}
+    password: ${hestia.redis.password}
+    database: ${hestia.redis.database}
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.hestia.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com:
+      hestia:
+        mapper: debug
+        service: info
+        controller: info
+
+hestia:
+  jwt:
+    # 管理端令牌
+    admin-secret-key: hestia-ops-admin-secret-key-2026
+    admin-ttl: 86400000
+    admin-token-name: token
+    # 住户端令牌（独立密钥，避免两端令牌互相冒用）
+    resident-secret-key: hestia-ops-resident-secret-key-2026
+    resident-ttl: 86400000
+    resident-token-name: authentication
+
+  alioss:
+    endpoint: ${hestia.alioss.endpoint}
+    access-key-id: ${hestia.alioss.access-key-id}
+    access-key-secret: ${hestia.alioss.access-key-secret}
+    bucket-name: ${hestia.alioss.bucket-name}
+
+  sla:
+    # SLA 超时扫描间隔（毫秒）
+    scan-interval: 60000
+    # 剩余时间小于该值（分钟）触发预警
+    warn-minutes: 30

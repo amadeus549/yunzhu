@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.InspectionTaskMapper">
+
+    <update id="update" parameterType="com.hestia.entity.InspectionTask">
+        update insp_task
+        <set>
+            <if test="executorId != null">executor_id = #{executorId},</if>
+            <if test="planDate != null">plan_date = #{planDate},</if>
+            <if test="actualTime != null">actual_time = #{actualTime},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="abnormalDesc != null">abnormal_desc = #{abnormalDesc},</if>
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.InspectionTaskVO">
+        select t.id, t.task_no, t.plan_id, p.name as plan_name, t.device_id, d.name as device_name,
+               t.executor_id, s.name as executor_name, t.plan_date, t.actual_time,
+               t.result, t.abnormal_desc, t.order_id, t.status
+        from insp_task t
+        left join insp_plan p on p.id = t.plan_id
+        left join dev_device d on d.id = t.device_id
+        left join sys_staff s on s.id = t.executor_id
+        <where>
+            <if test="planId != null">and t.plan_id = #{planId}</if>
+            <if test="executorId != null">and t.executor_id = #{executorId}</if>
+            <if test="status != null">and t.status = #{status}</if>
+            <if test="result != null">and t.result = #{result}</if>
+            <if test="beginDate != null">and t.plan_date &gt;= #{beginDate}</if>
+            <if test="endDate != null">and t.plan_date &lt;= #{endDate}</if>
+        </where>
+        order by t.plan_date desc, t.id desc
+    </select>
+</mapper>

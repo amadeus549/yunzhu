@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.WorkOrderMapper">
+
+    <!-- 工单视图公共字段：主表 + 类型/房屋/住户/工程师 关联 -->
+    <sql id="VO_COLUMNS">
+        o.id, o.order_no, o.category_id, c.name as category_name,
+        o.premise_id,
+        concat(ifnull(p.community, ''), ifnull(p.building, ''), ifnull(p.unit, ''), ifnull(p.room_no, '')) as premise_address,
+        o.resident_id, r.name as resident_name, r.phone as resident_phone,
+        o.title, o.description, o.priority, o.status, o.source,
+        o.expect_time, o.assignee_id, s.name as assignee_name,
+        o.response_deadline, o.resolve_deadline, o.total_amount,
+        o.response_breached, o.resolve_breached, o.is_rework, o.rework_count,
+        o.rating, o.comment, o.create_time
+    </sql>
+
+    <sql id="VO_JOINS">
+        from wo_order o
+        left join wo_category c on c.id = o.category_id
+        left join sys_premise p on p.id = o.premise_id
+        left join sys_resident r on r.id = o.resident_id
+        left join sys_staff s on s.id = o.assignee_id
+    </sql>
+
+    <update id="update" parameterType="com.hestia.entity.WorkOrder">
+        update wo_order
+        <set>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="premiseId != null">premise_id = #{premiseId},</if>
+            <if test="residentId != null">resident_id = #{residentId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="priority != null">priority = #{priority},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="source != null">source = #{source},</if>
+            <if test="slaRuleId != null">sla_rule_id = #{slaRuleId},</if>
+            <if test="responseDeadline != null">response_deadline = #{responseDeadline},</if>
+            <if test="resolveDeadline != null">resolve_deadline = #{resolveDeadline},</if>
+            <if test="expectTime != null">expect_time = #{expectTime},</if>
+            <if test="assigneeId != null">assignee_id = #{assigneeId},</if>
+            <if test="dispatcherId != null">dispatcher_id = #{dispatcherId},</if>
+            <if test="acceptTime != null">accept_time = #{acceptTime},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+            <if test="cancelTime != null">cancel_time = #{cancelTime},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="responseBreached != null">response_breached = #{responseBreached},</if>
+            <if test="resolveBreached != null">resolve_breached = #{resolveBreached},</if>
+            <if test="isRework != null">is_rework = #{isRework},</if>
+            <if test="reworkCount != null">rework_count = #{reworkCount},</if>
+            <if test="rating != null">rating = #{rating},</if>
+            <if test="comment != null">comment = #{comment},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.WorkOrderVO">
+        select <include refid="VO_COLUMNS"/>
+        <include refid="VO_JOINS"/>
+        <where>
+            <if test="orderNo != null and orderNo != ''">and o.order_no like concat('%', #{orderNo}, '%')</if>
+            <if test="title != null and title != ''">and o.title like concat('%', #{title}, '%')</if>
+            <if test="categoryId != null">and o.category_id = #{categoryId}</if>
+            <if test="status != null">and o.status = #{status}</if>
+            <if test="priority != null">and o.priority = #{priority}</if>
+            <if test="assigneeId != null">and o.assignee_id = #{assigneeId}</if>
+            <if test="residentId != null">and o.resident_id = #{residentId}</if>
+            <if test="premiseId != null">and o.premise_id = #{premiseId}</if>
+            <if test="beginTime != null">and o.create_time &gt;= #{beginTime}</if>
+            <if test="endTime != null">and o.create_time &lt;= #{endTime}</if>
+            <if test="slaBreached != null and slaBreached == 1">
+                and (o.response_breached = 1 or o.resolve_breached = 1
+                     or (o.resolve_deadline is not null and o.resolve_deadline &lt; now() and o.status in (1,2,3,4,5,6,8)))
+            </if>
+            <if test="slaBreached != null and slaBreached == 0">
+                and ifnull(o.response_breached, 0) = 0 and ifnull(o.resolve_breached, 0) = 0
+            </if>
+        </where>
+        order by field(o.status, 1, 2, 3, 4, 5, 6, 8, 7, 0), o.priority desc, o.create_time desc
+    </select>
+
+    <select id="selectVOById" resultType="com.hestia.vo.WorkOrderVO">
+        select <include refid="VO_COLUMNS"/>
+        <include refid="VO_JOINS"/>
+        where o.id = #{id}
+    </select>
+
+    <!-- 扫描需要判定超时的工单：响应超时（未接单阶段）或解决超时（已接单之后） -->
+    <select id="selectTimeoutOrders" resultType="com.hestia.entity.WorkOrder">
+        select * from wo_order
+        where status in (1,2,3,4,5,6,8)
+          and (
+            (ifnull(response_breached, 0) = 0 and response_deadline is not null
+                and response_deadline &lt; #{now} and status in (1,2,3))
+            or
+            (ifnull(resolve_breached, 0) = 0 and resolve_deadline is not null
+                and resolve_deadline &lt; #{now} and status in (4,5,6,8))
+          )
+        order by priority desc
+        limit 200
+    </select>
+
+    <!-- 临近截止的工单，用于提前预警 -->
+    <select id="selectWarningOrders" resultType="com.hestia.entity.WorkOrder">
+        select * from wo_order
+        where status in (1,2,3,4,5,6,8)
+          and resolve_deadline is not null
+          and ifnull(resolve_breached, 0) = 0
+          and resolve_deadline &gt;= #{from}
+          and resolve_deadline &lt;= #{to}
+        order by resolve_deadline
+        limit 100
+    </select>
+
+    <select id="avgResponseMinutes" resultType="java.lang.Double">        select avg(timestampdiff(minute, create_time, accept_time))
+        from wo_order
+        where accept_time is not null
+          and create_time &gt;= #{begin} and create_time &lt; #{end}
+    </select>
+
+    <select id="onTimeRate" resultType="java.lang.Double">
+        select ifnull(
+            sum(case when ifnull(resolve_breached, 0) = 0 then 1 else 0 end) * 100.0 / nullif(count(*), 0), 0)
+        from wo_order
+        where status = 7 and complete_time &gt;= #{begin} and complete_time &lt; #{end}
+    </select>
+
+    <select id="countGroupByStatus" resultType="com.hestia.vo.StatusDistributionVO">
+        select status, count(*) as count
+        from wo_order
+        where create_time &gt;= #{begin} and create_time &lt; #{end}
+        group by status
+        order by status
+    </select>
+
+    <select id="countTrend" resultType="com.hestia.vo.TrendVO">
+        select d.plan_date as date,
+               (select count(*) from wo_order o where date(o.create_time) = d.plan_date) as created,
+               (select count(*) from wo_order o where o.status = 7 and date(o.complete_time) = d.plan_date) as completed
+        from (
+            select date(create_time) as plan_date from wo_order
+             where create_time &gt;= #{begin} and create_time &lt; #{end}
+            union
+            select date(complete_time) as plan_date from wo_order
+             where status = 7 and complete_time is not null
+               and complete_time &gt;= #{begin} and complete_time &lt; #{end}
+        ) d
+        order by d.plan_date
+    </select>
+
+    <select id="countGroupByCategory" resultType="com.hestia.vo.CategoryReportVO">
+        select c.id as category_id, c.name as category_name, count(o.id) as count
+        from wo_category c
+        left join wo_order o on o.category_id = c.id
+             and o.create_time &gt;= #{begin} and o.create_time &lt; #{end}
+        group by c.id, c.name
+        order by count desc
+    </select>
+
+    <select id="slaReport" resultType="com.hestia.vo.SlaReportVO">
+        select count(*) as total,
+               sum(case when ifnull(response_breached, 0) = 0 then 1 else 0 end) as response_on_time,
+               ifnull(round(sum(case when ifnull(response_breached, 0) = 0 then 1 else 0 end) * 100.0 / nullif(count(*), 0), 2), 0) as response_rate,
+               sum(case when status = 7 and ifnull(resolve_breached, 0) = 0 then 1 else 0 end) as resolve_on_time,
+               ifnull(round(sum(case when status = 7 and ifnull(resolve_breached, 0) = 0 then 1 else 0 end) * 100.0
+                     / nullif(sum(case when status = 7 then 1 else 0 end), 0), 2), 0) as resolve_rate,
+               ifnull(round(avg(case when accept_time is not null then timestampdiff(minute, create_time, accept_time) end), 1), 0) as avg_response_minutes,
+               ifnull(round(avg(case when finish_time is not null then timestampdiff(minute, create_time, finish_time) end), 1), 0) as avg_resolve_minutes
+        from wo_order
+        where create_time &gt;= #{begin} and create_time &lt; #{end}
+    </select>
+
+    <select id="staffPerformance" resultType="com.hestia.vo.StaffPerformanceVO">
+        select s.id as staff_id, s.name as staff_name,
+               count(o.id) as total,
+               sum(case when o.status = 7 then 1 else 0 end) as completed,
+               ifnull(round(avg(case when o.finish_time is not null then timestampdiff(minute, o.accept_time, o.finish_time) end), 1), 0) as avg_resolve_minutes,
+               ifnull(round(sum(case when o.status = 7 and ifnull(o.resolve_breached, 0) = 0 then 1 else 0 end) * 100.0
+                     / nullif(sum(case when o.status = 7 then 1 else 0 end), 0), 2), 0) as on_time_rate,
+               ifnull(round(avg(o.rating), 1), 0) as avg_rating
+        from sys_staff s
+        left join wo_order o on o.assignee_id = s.id
+             and o.create_time &gt;= #{begin} and o.create_time &lt; #{end}
+        where s.role = 2
+        group by s.id, s.name
+        order by total desc
+    </select>
+</mapper>

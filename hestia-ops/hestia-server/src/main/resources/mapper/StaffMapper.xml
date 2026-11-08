@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hestia.mapper.StaffMapper">
+
+    <update id="update" parameterType="com.hestia.entity.Staff">
+        update sys_staff
+        <set>
+            <if test="staffNo != null">staff_no = #{staffNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="skillTags != null">skill_tags = #{skillTags},</if>
+            <if test="workloadLimit != null">workload_limit = #{workloadLimit},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="pageQuery" resultType="com.hestia.vo.StaffVO">
+        select s.id, s.staff_no, s.name, s.username, s.phone, s.role, s.skill_tags,
+               s.workload_limit, s.status,
+               (select count(*) from wo_order o where o.assignee_id = s.id and o.status in (3,4,5,6,8)) as active_count
+        from sys_staff s
+        <where>
+            <if test="name != null and name != ''">and s.name like concat('%', #{name}, '%')</if>
+            <if test="role != null">and s.role = #{role}</if>
+            <if test="status != null">and s.status = #{status}</if>
+        </where>
+        order by s.role, s.staff_no
+    </select>
+
+    <select id="selectEngineers" resultType="com.hestia.entity.Staff">
+        select * from sys_staff
+        where role = 2 and status = 1
+        <if test="skill != null and skill != ''">
+            and (skill_tags is null or skill_tags = '' or find_in_set(#{skill}, skill_tags) &gt; 0)
+        </if>
+        order by staff_no
+    </select>
+</mapper>
