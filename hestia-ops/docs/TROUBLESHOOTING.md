@@ -556,3 +556,40 @@ WorkOrderSubmitDTO）——它们走 Jackson，不是 Spring MVC 的 converter�
 build 跑在**桌面项目**（依赖完整），必须先把 yunzhu 的源码改动同步到桌面项目再 build，
 否则构建的是旧代码（本次第一遍 build 就因此产物 hash 未变）。
 验证产物是否真的更新：对比 Build hash、检查新页面文案是否存在于 chunk。
+
+
+---
+
+## 错误十一：接口文档 localhost/doc.html 返回 400
+
+### 现象
+- 直连后端 `8080/doc.html` 是 200，经 nginx `80/doc.html` 是 400（Tomcat 错误页）
+- 修复 400 后页面能打开，但样式/脚本全 404
+
+### 根因（两个 nginx 转发陷阱叠加）
+1. **400 的根因**：`/doc.html` 等 location 没配 `proxy_set_header Host $host`，
+   转发时 Host 头变成 upstream 名 `hestia_server`——**下划线违反 RFC 主机名规范**，
+   Tomcat 直接拒收返回 400。
+   实锤方法：`curl -H "Host: hestia_server" http://127.0.0.1:8080/doc.html` → 400；
+   `curl -H "Host: localhost" ...` → 200。
+2. **404 的根因**：nginx 正则 location `\.(js|css...)$`（静态缓存规则）**优先级高于**
+   普通前缀 location，`/webjars/**/*.js|css` 被抢走去本地磁盘找文件 → 404。
+   修复：文档 location 一律加 `^~` 前缀修饰符（命中后不再检查正则）。
+
+### 修复（仅改 nginx.conf，reload 即生效）
+四个文档 location（/doc.html、/webjars/、/swagger-resources/、/v2/）统一：
+```nginx
+location ^~ /doc.html {
+    proxy_pass http://hestia_server/doc.html;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+### 附带说明
+- `/v2/api-docs` 不带 group 参数是 404，属正常：项目两个 Docket 都命名了分组
+  （管理端/住户端），knife4j 页面会自动带 group 请求，无需处理
+- `favicon.ico` 404 是 knife4j UI jar 本身未提供，直连后端同样 404，无碍
+- 经验：**nginx 转发的每个 location 都应显式配 `proxy_set_header Host $host`**；
+  upstream 名尽量不含下划线（或全局统一加 Host 头）

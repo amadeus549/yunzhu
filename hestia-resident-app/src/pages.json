@@ -1,0 +1,42 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": { "navigationBarTitleText": "云筑住户端" }
+		},
+		{
+			"path": "pages/login/login",
+			"style": { "navigationBarTitleText": "登录" }
+		},
+		{
+			"path": "pages/repair/submit",
+			"style": { "navigationBarTitleText": "我要报修" }
+		},
+		{
+			"path": "pages/order/list",
+			"style": { "navigationBarTitleText": "我的工单" }
+		},
+		{
+			"path": "pages/order/detail",
+			"style": { "navigationBarTitleText": "工单详情" }
+		},
+		{
+			"path": "pages/cart/cart",
+			"style": { "navigationBarTitleText": "服务清单" }
+		},
+		{
+			"path": "pages/premise/premise",
+			"style": { "navigationBarTitleText": "我的房屋" }
+		},
+		{
+			"path": "pages/notice/notice",
+			"style": { "navigationBarTitleText": "消息通知" }
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "云筑住户端",
+		"navigationBarBackgroundColor": "#3b6ef0",
+		"backgroundColor": "#f5f7fa"
+	}
+}

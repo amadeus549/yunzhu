@@ -22,6 +22,7 @@
 |---|---|---|
 | `hestia-ops` | Java 后端（Spring Boot 多模块），所有业务接口 | **需要**（IDEA 启动 `HestiaApplication`） |
 | `hestia-admin` | Vue2 管理端**源码**，`npm run build` 出静态文件 | 不需要，构建后由 nginx 托管 |
+| `hestia-resident-app` | 住户端**源码**（uni-app），一套代码编译 H5 + 微信小程序 | 不需要，构建后由 nginx 托管 |
 | `hestia-nginx` | Nginx：静态托管 + 接口反向代理 + WebSocket | 常驻运行 |
 
 > 与苍穹外卖的区别：前端从"现成静态文件扔进 nginx"升级为**独立源码工程 + 构建发布**；接口路径不再经 `/api` 重写，前端请求路径与后端 `@RequestMapping` 完全一致；nginx 增加了 gzip、静态资源长缓存（文件名带 hash）、`index.html` 禁缓存等工程化配置。
@@ -54,7 +55,11 @@
 | 员工管理 | 工程师/管家账号与启停用 |
 | 运营报表 | SLA 达成率、工单趋势、类型分布、工程师绩效，支持导出 Excel |
 
-住户端接口（`/resident/**`：注册登录、商城购物车、报修提交、我的房屋）已在本后端预留，供小程序/住户 H5 后续接入。
+**住户端**（`hestia-resident-app`，uni-app）：手机号 + 验证码登录（演示验证码 `123456`，演示住户 `13800000001` 陈建国）、我要报修（选类型/房屋/服务项）、我的工单（详情/催单/验收评价/驳回/取消）、服务清单、我的房屋、消息通知。
+
+- **H5 版**：http://localhost/m/ （手机或浏览器打开，已由 nginx 托管）
+- **微信小程序版**：构建产物在 `hestia-resident-app/dist/build/mp-weixin`，用微信开发者工具"导入项目"选择该目录即可运行
+- 住户端接口前缀 `/resident/**`，token 请求头名为 `authentication`（与管理端 `token` 区分）
 
 ## 4. 快速开始
 
